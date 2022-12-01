@@ -1,15 +1,19 @@
 import run from "aocrunner";
+import lodash from 'lodash'
 
-const parseInput = (rawInput: string) => rawInput.split('\n');
+const parseInput = (rawInput: string) => rawInput;
 
-const part1 = (rawInput: string) => {
-  const input = parseInput(rawInput);
+
+const common = (rawInput: string) => {
+  const input = parseInput(rawInput)
+}
+
+const part1 = () => {
 
   return;
 };
 
-const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
+const part2 = () => {
 
   return;
 };
@@ -34,5 +38,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: false,
+  onlyTests: true,
 });
