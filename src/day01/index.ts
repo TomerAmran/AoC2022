@@ -17,7 +17,7 @@ const part2 = (rawInput: string) => {
   const groups = groupsAsString.map(_ => _.split('\n').map(_ => parseInt(_.trim())))
   const calSums = groups.map(_ => lodash.sum(_))
   calSums.sort()
-  return (calSums.pop() + calSums.pop() + calSums.pop())
+  return (lodash.sum(calSums.slice(-3)))
 };
 
 run({
