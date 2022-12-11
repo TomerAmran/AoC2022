@@ -88,7 +88,7 @@ const part2 = (rawInput: string) => {
     const ifFalse = parseInt(monkey[5].split(' ').pop())
     return {
       items,
-      operation: (old) => op === '+' ? old + (num === 'old' ? old : parseInt(num)) : old * (num === 'old' ? old : parseInt(num)),
+      operation: (old) => op === '+' ? old + (parseInt(num)) : old * (num === 'old' ? 1 : parseInt(num)),
       test: (curr) => curr % divisibleBy === 0,
       ifTrue,
       ifFalse,
@@ -132,20 +132,21 @@ run({
         Test: divisible by 23
           If true: throw to monkey 2
           If false: throw to monkey 3
+
 Monkey 1:
         Starting items: 54, 65, 75, 74
         Operation: new = old + 6
         Test: divisible by 19
           If true: throw to monkey 2
           If false: throw to monkey 0
-          
+
           Monkey 2:
         Starting items: 79, 60, 97
         Operation: new = old * old
         Test: divisible by 13
           If true: throw to monkey 1
           If false: throw to monkey 3
-          
+
           Monkey 3:
         Starting items: 74
         Operation: new = old + 3
@@ -158,5 +159,5 @@ Monkey 1:
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: false,
+  onlyTests: true,
 });
