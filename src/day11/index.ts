@@ -1,14 +1,14 @@
 import run from "aocrunner";
-
+import lodash from 'lodash'
 const parseInput = (rawInput: string) => rawInput;
 
 type Monkey = {
-  items: number[],
-  operation: (old: number) => number
-  test: (curr: number) => boolean
+  items: bigint[],
+  operation: (old: bigint) => bigint
   ifTrue: number,
   ifFalse: number,
-  inspectedItems: number
+  divisibleBy: bigint,
+  inspectedItems: bigint
 }
 // const monkeys: Monkey[] = [
 //   {
@@ -43,74 +43,82 @@ type Monkey = {
 // ]
 const part1 = (rawInput: string) => {
   return
-  const input = parseInput(rawInput).split('\n\n').map(_ => _.trim().split('\n').map(_ => _.trim()));
+  // const input = parseInput(rawInput).split('\n\n').map(_ => _.trim().split('\n').map(_ => _.trim()));
 
-  const monkeys: Monkey[] = input.map(monkey => {
-    const items = monkey[1].split(' ').slice(2).map(_ => _.substring(0, 2)).map(_ => parseInt(_))
-    const [, op, num] = monkey[2].match(/Operation: new = old (\+|\*{1}) (\d+|old)/)
-    const divisibleBy = parseInt(monkey[3].split(' ').pop())
-    const ifTrue = parseInt(monkey[4].split(' ').pop())
-    const ifFalse = parseInt(monkey[5].split(' ').pop())
-    return {
-      items,
-      operation: (old) => op === '+' ? old + (num === 'old' ? old : parseInt(num)) : old * (num === 'old' ? old : parseInt(num)),
-      test: (curr) => curr % divisibleBy === 0,
-      ifTrue,
-      ifFalse,
-      inspectedItems: 0
-    }
-  })
-  Array(20).fill(null).forEach((_) => {
-    monkeys.forEach(monkey => {
-      monkey.items.forEach(item => {
-        item = monkey.operation(item)
-        item = Math.floor(item / 3)
-        const toMonkey = monkey.test(item) ? monkey.ifTrue : monkey.ifFalse
-        monkeys[toMonkey].items.push(item)
-      })
-      monkey.inspectedItems += monkey.items.length
-      monkey.items = []
-    })
-  })
-  const [first, second] = monkeys.map(_ => _.inspectedItems).sort((a, b) => a - b).slice(-2)
+  // const monkeys: Monkey[] = input.map(monkey => {
+  //   const items = monkey[1].split(' ').slice(2).map(_ => _.substring(0, 2)).map(_ => BigInt(_))
+  //   const [, op, num] = monkey[2].match(/Operation: new = old (\+|\*{1}) (\d+|old)/)
+  //   const divisibleBy = BigInt(monkey[3].split(' ').pop())
+  //   const ifTrue = BigInt(monkey[4].split(' ').pop())
+  //   const ifFalse = BigInt(monkey[5].split(' ').pop())
+  //   return {
+  //     items,
+  //     operation: (old) => op === '+' ? old + (num === 'old' ? old : BigInt(num)) : old * (num === 'old' ? old : BigInt(num)),
+  //     test: (curr) => curr % divisibleBy === 0,
+  //     ifTrue,
+  //     ifFalse,
+  //     inspectedItems: 0
+  //   }
+  // })
+  // Array(20).fill(null).forEach((_) => {
+  //   monkeys.forEach(monkey => {
+  //     monkey.items.forEach(item => {
+  //       item = monkey.operation(item)
+  //       item = Math.floor(item / 3)
+  //       const toMonkey = monkey.test(item) ? monkey.ifTrue : monkey.ifFalse
+  //       monkeys[toMonkey].items.push(item)
+  //     })
+  //     monkey.inspectedItems += monkey.items.length
+  //     monkey.items = []
+  //   })
+  // })
+  // const [first, second] = monkeys.map(_ => _.inspectedItems).sort((a, b) => a - b).slice(-2)
 
-  return first * second;
+  // return first * second;
 };
 
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput).split('\n\n').map(_ => _.trim().split('\n').map(_ => _.trim()));
-  console.log(parseInput(rawInput).split('\n'))
   const monkeys: Monkey[] = input.map(monkey => {
-    const items = monkey[1].split(' ').slice(2).map(_ => _.substring(0, 2)).map(_ => parseInt(_))
+    const items = monkey[1].split(' ').slice(2).map(_ => _.substring(0, 2)).map(_ => BigInt(_))
     const [, op, num] = monkey[2].match(/Operation: new = old (\+|\*{1}) (\d+|old)/)
-    const divisibleBy = parseInt(monkey[3].split(' ').pop())
+    const divisibleBy = BigInt(monkey[3].split(' ').pop())
     const ifTrue = parseInt(monkey[4].split(' ').pop())
     const ifFalse = parseInt(monkey[5].split(' ').pop())
     return {
       items,
-      operation: (old) => op === '+' ? old + (parseInt(num)) : old * (num === 'old' ? 1 : parseInt(num)),
-      test: (curr) => curr % divisibleBy === 0,
+      operation: (old) => {
+        if (op === '+') {
+          return old + BigInt(num)
+        }
+        if (op === '*') {
+          return old * (num === 'old' ? old : BigInt(num))
+        }
+        throw Error(op)
+      },
       ifTrue,
       ifFalse,
-      inspectedItems: 0
+      inspectedItems: 0n,
+      divisibleBy
     }
   })
-  console.log(monkeys)
-  Array(10000).fill(null).forEach((_) => {
+  const base = monkeys.map(_ => _.divisibleBy).reduce((a, b) => a * b, 1n)
+  Array(10000).fill(null).forEach((_, i) => {
+    // console.log(i)
     monkeys.forEach(monkey => {
       monkey.items.forEach(item => {
-        item = monkey.operation(item)
-        // item = Math.floor(item / 3)
-        const toMonkey = monkey.test(item) ? monkey.ifTrue : monkey.ifFalse
+        item = monkey.operation(item) % base
+        const toMonkey = (item % monkey.divisibleBy === 0n) ? monkey.ifTrue : monkey.ifFalse
         monkeys[toMonkey].items.push(item)
       })
-      monkey.inspectedItems += monkey.items.length
+      monkey.inspectedItems += BigInt(monkey.items.length)
       monkey.items = []
     })
   })
-  const [first, second] = monkeys.map(_ => _.inspectedItems).sort((a, b) => a - b).slice(-2)
+  console.log(monkeys.map(_ => _.inspectedItems).sort((a, b) => Number(a - b)))
+  const [first, second] = monkeys.map(_ => _.inspectedItems).sort((a, b) => Number(a - b)).slice(-2)
 
-  return first * second;
+  return Number(first * second);
 };
 
 run({
@@ -159,5 +167,5 @@ Monkey 1:
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
