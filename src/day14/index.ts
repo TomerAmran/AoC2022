@@ -95,28 +95,23 @@ const part2 = (rawInput: string) => {
     .map(_ => _.split(' -> ').map(_ => _.split(',').map(_ => +_)));
   const [xMin, xMax] = input.flat().map(_ => _[0]).reduce((prv, cur) => ([Math.min(cur, prv[0]), Math.max(cur, prv[1])]), [1000, -1])
   const [yMin, yMax] = input.flat().map(_ => _[1]).reduce((prv, cur) => ([Math.min(cur, prv[0]), Math.max(cur, prv[1])]), [1000, -1])
-  const cave = Array(yMax + 1).fill(1).map(_ => Array(xMax - xMin + 1).fill('.'))
+  // const cave = Array(yMax + 1).fill(1).map(_ => Array(xMax - xMin + 1).fill('.'))
+  const cave = {}
   function setCave(x: number, y: number, val: any) {
-    cave[y][x - xMin] = val
+    return cave[`${y}_${x}`] = val
   }
   function getCave(x: number, y: number) {
-    if (y === yMax + 1) {
-      return '.'
+    if (y === yMax + 2) {
+      setCave(x, y, '#')
     }
-    if (y === xMax + 2) {
-      return '#'
-    }
-    if (y <= xMax + 2 && (x < xMin || x > xMax)) {
-      return '.'
-    }
-    const val = cave[y][x - xMin]
+    const val = cave[`${y}_${x}`]
     if (!val) {
-      throw Error(`outofbound ${x} ${y}`)
+      return '.'
     }
     return val
   }
   function printCave() {
-    console.log(cave.map(_ => _.join('')).join('\n'))
+    // console.log(cave.map(_ => _.join('')).join('\n'))
     console.log('\n')
   }
   function isEqual(a, b) {
@@ -202,5 +197,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
