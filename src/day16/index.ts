@@ -1,7 +1,7 @@
 import run from "aocrunner";
 import lodash from 'lodash'
 const parseInput = (rawInput: string) => rawInput;
-type Node = { source: string, rate: number, targets: string[], opened: Set<string>, max: number, tick: number,prev?: string }
+type Node = { source: string, rate: number, targets: string[], opened: Set<string>, max: number, tick: number, prev?: string }
 const copy = (_: Node): Node => {
   const x: Node = JSON.parse(JSON.stringify(_))
   x.opened = copySet(_.opened)
@@ -20,40 +20,37 @@ const part1 = (rawInput: string) => {
       [curr.source]: curr
     }
   }, {})
-  // console.log(nodes)
-  let currQueue: Node[] = [nodes['AA']]
-  for (let tick = 30; tick > -1; tick = tick - 1) {
-    console.log(currQueue.map(_ => [_.source, _.prev, _.max]), tick)
+  let max = 0
+  let runs = 0
+  function rec(curr: Node) {
+    // console.log(runs++);
+    console.log(max);
 
-    let nextMap: Record<string, Node> = {}
-    while (currQueue.length > 0) {
-      const curr = currQueue.pop()
-      curr.targets.forEach(target => {
-        if (!nextMap[target]) {
-          nextMap[target] = copy(nodes[target])
-          nextMap[target].opened = copySet(curr.opened)
-          nextMap[target].max = curr.max
-          nextMap[target].prev = curr.source
-        }
-        else if (curr.max > nextMap[target].max) {
-          nextMap[target].max = curr.max
-          nextMap[target].opened = copySet(curr.opened)
-          nextMap[target].prev = curr.source
-        }
-      })
-      if (!curr.opened.has(curr.source)) {
-        const newVal = curr.max + (curr.rate * (tick - 1))
-        if (!nextMap[curr.source] || newVal > nextMap[curr.source].max) {
-          nextMap[curr.source] = copy(curr)
-          nextMap[curr.source].max = newVal
-          nextMap[curr.source].opened.add(curr.source)
-          nextMap[curr.source].prev = curr.source
-        }
-      }
+    // console.log(curr.tick, curr.source);
+    max = Math.max(max, curr.max)
+    if (curr.tick === 0) { return }
+    if (!curr.opened.has(curr.source)) {
+      const newMax = curr.max + (curr.rate * (curr.tick - 1))
+      const next = copy(curr)
+      next.max = newMax
+      next.opened.add(curr.source)
+      next.prev = curr.source
+      next.tick = curr.tick - 1
+      rec(next)
     }
-    currQueue = Object.values(nextMap)
+    if (curr.opened.size === input.length) { return }
+    curr.targets.forEach(target => {
+      const next = copy(nodes[target])
+      next.opened = copySet(curr.opened)
+      next.max = curr.max
+      next.prev = curr.source
+      next.tick = curr.tick - 1
+      rec(next)
+    })
+
   }
-  return Math.max(...currQueue.map(_ => _.max))
+  rec(nodes['AA'])
+  return max
 };
 
 const part2 = (rawInput: string) => {
