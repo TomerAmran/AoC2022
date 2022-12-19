@@ -240,13 +240,13 @@
         "attempts": [
           "2088"
         ],
-        "time": 1974.302536
+        "time": 1922.939386
       },
       "part2": {
         "solved": false,
-        "result": "2114",
+        "result": "2666",
         "attempts": [],
-        "time": 1524.627872
+        "time": 452460.658321
       }
     },
     {

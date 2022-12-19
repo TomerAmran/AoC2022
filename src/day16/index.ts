@@ -1,4 +1,5 @@
 import run from "aocrunner";
+import { assert } from "console";
 import lodash from 'lodash'
 const parseInput = (rawInput: string) => rawInput;
 type Node = {
@@ -85,11 +86,111 @@ const part1 = (rawInput: string) => {
   return rec('AA', new Set(), 30)
 
 };
-
+const memo = {}
+function getAllSubset(arr, size) {
+  const key = `${arr.join('_')}_${size}`
+  // console.log(key)
+  if (memo[key]) {
+    console.log('subset hit')
+    return memo[key]
+  }
+  if (size === 1) {
+    return (arr.map(_ => [_]))
+  }
+  const temp = [...arr]
+  const results = []
+  while (temp.length >= size) {
+    const currElement = temp.pop()
+    const rests = getAllSubset(temp, size - 1)
+    results.push(...rests.map(_ => [currElement, ..._]))
+  }
+  memo[key] = results
+  return results
+}
+function getPairsOfSubset(arr: string[]): string[][][] {
+  const limit = Math.floor(arr.length / 2)
+  return Array(limit).fill(undefined).map((_, i) => {
+    const firsts = getAllSubset(arr, i + 1)
+    return firsts.map(first => [first, arr.filter(_ => !first.includes(_))])
+  }).flat()
+}
 const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
+  const regex = /Valve (.+) has flow rate=(\d+); tunnel(s?) lead(s?) to valve(s?) ((.{2}(,?)( ?))+)/
+  const input: any[] = parseInput(rawInput).split('\n').map(_ => _.match(regex))
+    .map(([, source, rate, , , , ...targets]) =>
+    ({
+      source, rate: +rate, targets: targets.slice(0, -3)[0].split(', ')
+      , opened: new Set(), max: 0, tick: 30, distanceMap: {}
+    }));
+  const nodes: Record<string, Node> = input.reduce((prev, curr) => {
+    return {
+      ...prev,
+      [curr.source]: curr
+    }
+  }, {})
+  const nonZeroValves = input.filter(_ => _.rate > 0).concat(nodes['AA'])
 
-  return;
+  nonZeroValves.forEach(valve1 => {
+    nonZeroValves.filter(_ => _ !== valve1).forEach(valve2 => {
+      const q: [Node, number][] = [[valve1, 0]]
+      const visited = new Set<string>()
+      while (q.length > 0) {
+        const [node, distance] = q.pop()
+        visited.add(node.source)
+        if (node === valve2) {
+          valve1.distanceMap[valve2.source] = distance
+          break
+        }
+        else {
+          node.targets.filter(_ => !visited.has(_)).forEach((target) => {
+            q.unshift([nodes[target], distance + 1])
+          })
+        }
+      }
+    })
+  })
+  // console.log(nonZeroValves.map(_ => ([_.source, _.distanceMap])));
+
+  const memo = {}
+
+  function rec(node: string, opened: Set<string>, tick: number) {
+    if (tick === 0) return 0;
+    const pathOptionsResults = Object.entries(nodes[node].distanceMap)
+      .filter(([id, distance]) => !opened.has(id) && tick > distance)
+      .map(([targetNode, distance]) => {
+        const remaining = tick - distance - 1;
+        const pressure = nodes[targetNode].rate * remaining;
+        const newOpened = new Set(opened).add(targetNode)
+        // const key = `${targetNode}_${remaining}_${[...newOpened.keys()].join('_')}`
+
+        // console.log(key)
+        // if (memo[key]) {
+        //   console.log('hit')
+        //   return pressure + memo[key]
+        // }
+        // else {
+        // console.log('miss')
+        const nextRec = rec(targetNode, newOpened, remaining)
+        // memo[key] = nextRec
+        return pressure + nextRec
+        // }
+      })
+    return Math.max(0, ...pathOptionsResults);
+  }
+
+
+  const paris = getPairsOfSubset(nonZeroValves.map(_ => _.source))
+  console.log('finished pairs division', paris.length);
+
+  const ress = paris.map(([me, elephent], i) => {
+    console.log('remaining', (paris.length - i + 1) / paris.length)
+    const res = rec('AA', new Set(me), 26) + rec('AA', new Set(elephent), 26)
+    return res
+
+  })
+  return lodash.max(ress)
+  // return rec('AA', new Set(), 30)
+
 };
 
 run({
@@ -130,5 +231,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
